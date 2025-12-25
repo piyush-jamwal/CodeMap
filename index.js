@@ -10,6 +10,8 @@ function parseToAst(code, filePath) {
 
   const plugins = [
     "jsx",
+
+    "decorators-legacy",
     "classProperties",
     "dynamicImport",
     "optionalChaining",
@@ -32,9 +34,12 @@ function resolveImportFile(fromDir, spec) {
   // If import already has an extension
   if (path.extname(base)) {
     const ext = path.extname(base);
-    if (![".js", ".jsx", ".ts", ".tsx"].includes(ext)) return null;
-    if (fs.existsSync(base) && fs.statSync(base).isFile()) return base;
-    return null;
+    // If it's a recognized source extension, resolve directly
+    if ([".js", ".jsx", ".ts", ".tsx"].includes(ext)) {
+      if (fs.existsSync(base) && fs.statSync(base).isFile()) return base;
+      // fall through to try candidates (e.g., directory with same suffix)
+    }
+    // Otherwise, treat it as extensionless (e.g., ".service" suffix in TS filenames)
   }
 
   const candidates = [
@@ -111,8 +116,25 @@ function parseFile(filePath, visited = new Set()) {
     // Only trace relative imports
     if (!imp.startsWith(".") && !imp.startsWith("/")) continue;
     if (imp.endsWith(".json")) continue;
-    const resolved = resolveImportFile(path.dirname(absolutePath), imp);
-    if (!resolved) continue;
+    const fromDir = path.dirname(absolutePath);
+    const resolved = resolveImportFile(fromDir, imp);
+    try {
+      console.warn(
+        `[trace] from=${absolutePath} import=${imp} resolved=${
+          resolved || "null"
+        }`
+      );
+    } catch {}
+    if (!resolved) {
+      // try additional TS candidate: .d.ts
+      const base = path.resolve(fromDir, imp);
+      const dTs = `${base}.d.ts`;
+      if (fs.existsSync(dTs) && fs.statSync(dTs).isFile()) {
+        const childNodeDTs = parseFile(dTs, visited);
+        if (childNodeDTs) node.imports.push(childNodeDTs);
+      }
+      continue;
+    }
 
     const childNode = parseFile(resolved, visited);
     if (childNode) node.imports.push(childNode);
