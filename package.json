@@ -1,16 +1,30 @@
 {
-  "name": "tracer",
+  "name": "js-dependency-tracer",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "A tool to trace the dependency tree of a JavaScript or TypeScript file",
+  "main": "src/index.js",
+  "bin": {
+    "js-dependency-tracer": "bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "dependency",
+    "tracer",
+    "ast",
+    "javascript",
+    "typescript",
+    "react",
+    "nestjs"
+  ],
+  "author": "Piyush Jamwal",
+  "license": "MIT",
   "dependencies": {
-    "@babel/parser": "^7.28.5",
-    "acorn": "^8.15.0"
+    "@babel/parser": "^7.28.5"
   }
 }
